@@ -50,7 +50,7 @@ jobs:
           docker pull nginx:latest
           docker tag nginx:latest ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
           docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
-    ### Update K8S deployment manifiest or create new PR
+    ### Update K8S deployment manifiest or create new PR in main
     - name: Checkout deployment repository
       uses: actions/checkout@v3
       if: steps.semantic.outputs.new_release_published == 'true'
