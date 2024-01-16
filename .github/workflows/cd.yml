@@ -1,0 +1,104 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main", "staging" ]
+
+permissions:
+  contents: write
+
+env:
+  ECR_REPOSITORY: nginx
+  AWS_REGION: us-east-1
+  
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.ref_name }}
+    steps:
+    ### Setup
+    - name: Check out Code
+      uses: actions/checkout@v3    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{env.AWS_REGION}}
+    - name: Setup yq
+      uses: vegardit/gha-setup-yq@v1
+    ### Semantic Release
+    - name: Semantic Release
+      uses: cycjimmy/semantic-release-action@v4
+      id: semantic
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    ### Build and Push Docker Image
+    - name: Login to Amazon ECR
+      if: steps.semantic.outputs.new_release_published == 'true'
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    - name: Build, tag, and push image to Amazon ECR
+      if: steps.semantic.outputs.new_release_published == 'true'
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ steps.semantic.outputs.new_release_version }}
+      run: |
+          echo docker build -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }} -f docker/Dockerfile .
+          echo docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+          docker pull nginx:latest
+          docker tag nginx:latest ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+    ### Update K8S deployment manifiest or create new PR
+    - name: Checkout deployment repository
+      uses: actions/checkout@v3
+      if: steps.semantic.outputs.new_release_published == 'true'
+      with: 
+        repository: dlopezb93/sample-argocd-nginx-deployment
+        path: ./source-deployments
+        ref: main
+        token: ${{ secrets.GIT_BOT_TOKEN }}
+    - name: Staging - Update K8S Manifiest
+      if: (steps.semantic.outputs.new_release_published == 'true' && vars.STAGE == 'stg')  
+      env:
+        IMAGE_TAG: ${{ steps.semantic.outputs.new_release_version }}      
+      run: |
+        cd ./source-deployments
+        yq '.image.tag = "${{ env.IMAGE_TAG }}"' -i ./charts/nginx/values-${{ vars.STAGE }}.yaml
+        git add .
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git commit -am "chore(stg): release ${{ env.IMAGE_TAG }} [skip ci]"
+        git push
+    - name: Production - Create PR in deployments repository
+      if: (steps.semantic.outputs.new_release_published == 'true' && vars.STAGE == 'prd')
+      env:
+        IMAGE_TAG: ${{ steps.semantic.outputs.new_release_version }}
+        GH_TOKEN: ${{ secrets.GIT_BOT_TOKEN }}        
+      run: |
+        REPOSITORY="dlopezb93/sample-argocd-nginx-deployment"
+        FOLDER="bin/$REPOSITORY"
+        BRANCH="chore/release-tag-${{ env.IMAGE_TAG }}"
+
+        git clone \
+          --depth=1 \
+          --branch=main \
+          https://dlopezb93:${{ secrets.GIT_BOT_TOKEN }}@github.com/$REPOSITORY \
+          $FOLDER
+
+        cd $FOLDER
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git checkout -b $BRANCH
+        yq '.image.tag = "${{ env.IMAGE_TAG }}"' -i ./charts/nginx/values-${{ vars.STAGE }}.yaml
+        cat ./charts/nginx/values-${{ vars.STAGE }}.yaml
+        git add .
+        git commit -am "chore(prd): release image tag ${{ env.IMAGE_TAG}} [skip ci]"
+        git push origin $BRANCH
+        gh pr create \
+            --body "" \
+            --title "chore(prd): release image tag ${{ env.IMAGE_TAG}} " \
+            --head "$BRANCH" \
+            --base "main"
+  
