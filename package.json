@@ -43,5 +43,8 @@
       ],
       "@semantic-release/github"
     ]
+  },
+  "scripts": {
+    "prepare": "husky install"
   }
 }
