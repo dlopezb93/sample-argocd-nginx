@@ -1,5 +1,5 @@
-# 1.0.0 (2024-01-17)
 
+# [1.0.0-rc.3](https://github.com/dlopezb93/sample-argocd-nginx/compare/v1.0.0-rc.2...v1.0.0-rc.3) (2024-01-17)
 
 ### Bug Fixes
 
@@ -8,6 +8,7 @@
 
 ### Features
 
+* update count variable ([a624ea4](https://github.com/dlopezb93/sample-argocd-nginx/commit/a624ea474fe8f80982c17ccedb77c6552d253cad))
 * create count variable ([cf3c686](https://github.com/dlopezb93/sample-argocd-nginx/commit/cf3c686b93701281265d38ecba54fff58c2fb113))
 * implement java class ([26bdf03](https://github.com/dlopezb93/sample-argocd-nginx/commit/26bdf036bb978380fd734331719f238311856b7f))
 * initial commit ([a4e2822](https://github.com/dlopezb93/sample-argocd-nginx/commit/a4e2822ec54e94504186a7a544ac8cef9aeeebff))
