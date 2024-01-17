@@ -1,3 +1,10 @@
+# [1.0.0-rc.3](https://github.com/dlopezb93/sample-argocd-nginx/compare/v1.0.0-rc.2...v1.0.0-rc.3) (2024-01-17)
+
+
+### Features
+
+* update count variable ([a624ea4](https://github.com/dlopezb93/sample-argocd-nginx/commit/a624ea474fe8f80982c17ccedb77c6552d253cad))
+
 # [1.0.0-rc.2](https://github.com/dlopezb93/sample-argocd-nginx/compare/v1.0.0-rc.1...v1.0.0-rc.2) (2024-01-17)
 
 
