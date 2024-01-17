@@ -1,3 +1,3 @@
 public class main {
-    private int count = 0;
+    private int count = 1;
 }
