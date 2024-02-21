@@ -1,3 +1,9 @@
+# [1.0.0-rc.4](https://github.com/dlopezb93/sample-argocd-nginx/compare/v1.0.0-rc.3...v1.0.0-rc.4) (2024-02-21)
+
+
+### Features
+
+* create sum method ([2376eb3](https://github.com/dlopezb93/sample-argocd-nginx/commit/2376eb3cfa8a478312cf6eb35d603016581e31dc))
 
 # [1.0.0-rc.3](https://github.com/dlopezb93/sample-argocd-nginx/compare/v1.0.0-rc.2...v1.0.0-rc.3) (2024-01-17)
 
